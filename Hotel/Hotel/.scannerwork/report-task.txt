@@ -1,0 +1,6 @@
+projectKey=mel_tp_2
+serverUrl=http://localhost:9000
+serverVersion=25.2.0.102705
+dashboardUrl=http://localhost:9000/dashboard?id=mel_tp_2
+ceTaskId=38c18128-a9ab-455e-833f-479e36509838
+ceTaskUrl=http://localhost:9000/api/ce/task?id=38c18128-a9ab-455e-833f-479e36509838
