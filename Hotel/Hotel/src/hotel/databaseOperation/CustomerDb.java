@@ -5,13 +5,12 @@
  */
 package hotel.databaseOperation;
 
+import hotel.classes.UserInfo;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import javax.swing.JOptionPane;
-
-import hotel.classes.UserInfo;
 
 /**
  *
@@ -26,76 +25,82 @@ public class CustomerDb {
     {
         conn = DataBaseConnection.connectTODB();
     }
+    //***************************and here */
       public void insertCustomer(UserInfo user)  {
         try {
-            String insertQuery = "insert into userInfo"
-                    + "('" + "name" + "'," + "'" + "address" + "','" + "phone" + "','" + "type" + "')"
-                    + " values('"
-                    + user.getName()
-                    + "','" + user.getAddress() + "'"
-                    + ",'" + user.getPhoneNo() + "'"
-                    + ",'" + user.getType() + "'"
-                    + ")";
-
+            String insertQuery = ""
+                + "INSERT INTO userInfo "
+                + "(name, address, phone, type) "
+                + "VALUES (?, ?, ?, ?)";
+        
             statement = conn.prepareStatement(insertQuery);
-
-            statement.execute();
-
-            JOptionPane.showMessageDialog(null, "successfully inserted new Customer");
-
+        
+            statement.setString(1, user.getName());
+            statement.setString(2, user.getAddress());
+            statement.setString(3, user.getPhoneNo());
+            statement.setString(4, user.getType());
+        
+            statement.executeUpdate(); // Use executeUpdate for inserts
+        
+            JOptionPane.showMessageDialog(null, "Successfully inserted new Customer!");
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(null, ex.toString() + "\n" + "InsertQuery Failed");
-        }
-        finally
-        {
+            JOptionPane.showMessageDialog(null, ex.toString() + "\nInsert query Failed");
+        } finally {
             flushStatementOnly();
         }
-        
-        
+                
     }
-    
+  //************************** i modify here  */  
     public void updateCustomer(UserInfo user) {
         try {
-            String updateQuery = "update userInfo set name = '"
-                    + user.getName() + "',"
-                    + "address = '" + user.getAddress() + "',"
-                    + "phone = '" + user.getPhoneNo() + "',"
-                    + "type = '" + user.getType() + "' where user_id= "
-                    + user.getCustomerId();
-
-           
-            statement = conn.prepareStatement(updateQuery);
-
-            statement.execute();
-
-            JOptionPane.showMessageDialog(null, "successfully updated new Customer");
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(null, ex.toString() + "\n" + "Update query Failed");
-        }
+            String updateQuery = ""
+                + "UPDATE userInfo "
+                + "SET name = ?, "
+                + "address = ?, "
+                + "phone = ?, "
+                + "type = ? "
+                + "WHERE user_id = ?";
         
-        finally
-        {
-            flushStatementOnly();
-        }
-
-    }
-
-    public void deleteCustomer(int userId) throws SQLException {
-        try {
-            String deleteQuery = "delete from userInfo where user_id=" + userId;
-            statement = conn.prepareStatement(deleteQuery);
-            statement.execute();
-            JOptionPane.showMessageDialog(null, "Deleted user");
+            statement = conn.prepareStatement(updateQuery);
+        
+            statement.setString(1, user.getName());
+            statement.setString(2, user.getAddress());
+            statement.setString(3, user.getPhoneNo());
+            statement.setString(4, user.getType());
+            statement.setInt(5, user.getCustomerId());
+        
+            statement.executeUpdate(); // Use executeUpdate for update/insert/delete
+        
+            JOptionPane.showMessageDialog(null, "Successfully updated Customer!");
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(null, ex.toString() + "\n" + "Delete query Failed");
-        }
-        finally
-        {
+            JOptionPane.showMessageDialog(null, ex.toString() + "\nUpdate query Failed");
+        } finally {
             flushStatementOnly();
         }
 
     }
+//********************************and here ****************************************** */
+    public void deleteCustomer(int userId) throws SQLException {
+        String sql = "DELETE FROM userInfo WHERE customer_id = ?";
 
+  try (
+    Connection conn = DataBaseConnection.connectTODB();
+    PreparedStatement pstmt = conn.prepareStatement(sql)
+  ) {
+    pstmt.setInt(1, userId);
+
+    int rows = pstmt.executeUpdate();
+    JOptionPane.showMessageDialog(
+      null, rows + " customer(s) deleted successfully!"
+    );
+  } catch (SQLException ex) {
+    JOptionPane.showMessageDialog(
+      null, "Error deleting customer: " + ex.getMessage()
+    );
+  }
+
+    }
+//****************************************************************** */
     public ResultSet getAllCustomer() {
         try {
             String query = "select * from userInfo";

@@ -9,7 +9,7 @@ public class Item {
     private int itemId;
     private String itemName;
     private String description;
-    private int price;
+    private double price;
 
     public int getItemId() {
         return itemId;
@@ -35,11 +35,11 @@ public class Item {
         this.description = description;
     }
 
-    public int getPrice() {
+    public double getPrice() {
         return price;
     }
 
-    public void setPrice(int price) {
+    public void setPrice(double price) {
         this.price = price;
     }
 

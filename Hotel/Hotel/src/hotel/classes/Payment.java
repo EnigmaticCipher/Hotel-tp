@@ -2,9 +2,6 @@ package hotel.classes;
 
 import java.util.ArrayList;
 
-import I3.Classes.Booking;
-import I3.Classes.ExtraOrders;
-
 public class Payment {
     
     private Booking booking;

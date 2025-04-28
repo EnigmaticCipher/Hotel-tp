@@ -17,7 +17,10 @@ public class DataBaseConnection {
     public static Connection connectTODB() {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            return DriverManager.getConnection(url, "root", "root"); // * Hardcoded
+            String url  = System.getenv("DB_URL");
+            String user = System.getenv("DB_USER");
+            String pass = System.getenv("DB_PASS");
+            return DriverManager.getConnection(url, user, pass); // * Hardcoded
         } catch (Exception e) {
 
             System.err.println("Connection error");

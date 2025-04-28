@@ -56,7 +56,7 @@ public class ExtraOrders {
     
     public int calculateTotal()
     {
-       return item.getPrice() * quantity;
+       return (int) (item.getPrice() * quantity);
     }
 
     

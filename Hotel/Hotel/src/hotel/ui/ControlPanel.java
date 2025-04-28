@@ -5,28 +5,28 @@
  */
 package hotel.ui;
 
-import hotel.classes.Booking;
-import hotel.classes.UserInfo;
-import hotel.databaseOperation.BookingDb;
-import hotel.databaseOperation.CustomerDb;
-import hotel.databaseOperation.DatabaseOperation;
-
 import java.awt.Color;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Vector;
+
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListModel;
+import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
-
 import javax.swing.text.JTextComponent;
+
 import org.jdesktop.swingx.autocomplete.AutoCompleteDecorator;
+
+import hotel.classes.Booking;
+import hotel.classes.UserInfo;
+import hotel.databaseOperation.BookingDb;
+import hotel.databaseOperation.CustomerDb;
+import hotel.databaseOperation.DatabaseOperation;
 
 /**
  *
@@ -37,16 +37,15 @@ public class ControlPanel extends javax.swing.JFrame {
     /**
      * Creates new form ControlPanel
      */
-    Vector<String> customerList = new Vector<>();
-    DatabaseOperation db = new DatabaseOperation();
-    CustomerDb customerdb = new CustomerDb();
-    Booking booking;
-    BookingDb bookingdb = new BookingDb();
-    boolean existingCustomer = false;
-    UserInfo user;
-    ResultSet result;
-
-    public ControlPanel() {
+    ArrayList<String> customerList = new ArrayList<>();
+   // Vector<String> customerList = new Vector<>();
+   private final transient DatabaseOperation db = new DatabaseOperation();
+   private final transient CustomerDb customerdb = new CustomerDb();
+   private transient Booking booking;
+   private final transient BookingDb bookingdb = new BookingDb();
+   private transient boolean existingCustomer = false;
+   private transient UserInfo user;
+   public ControlPanel() {
 
         initComponents();
         this.getContentPane().setBackground(new Color(241, 241, 242));
@@ -57,7 +56,7 @@ public class ControlPanel extends javax.swing.JFrame {
     }
 
     public void populateWithBookingData() {
-        result = bookingdb.getBookingInformation();
+        bookingdb.getBookingInformation();
 
         // CustomCellRenderer customRenderer = new CustomCellRenderer();
         bookingdb.flushAll();
@@ -128,21 +127,19 @@ public class ControlPanel extends javax.swing.JFrame {
 
         jPanel3.setBackground(new java.awt.Color(230, 231, 232));
 
-        btnRoomUp.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resources/AddRoomButton.png"))); // NOI18N
-        btnRoomUp.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btn_room_upActionPerformed(evt);
-            }
-        });
+       btnRoomUp.setIcon(new ImageIcon(getClass().getResource("/resources/AddRoomButton.png")));
+btnRoomUp.addActionListener(this::btn_room_upActionPerformed);
 
         roomsList.setFont(new java.awt.Font("Serif", 0, 24)); // NOI18N
         roomsList.setModel(new javax.swing.AbstractListModel() {
             String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
 
+            @Override
             public int getSize() {
                 return strings.length;
             }
 
+            @Override
             public Object getElementAt(int i) {
                 return strings[i];
             }
@@ -210,6 +207,7 @@ public class ControlPanel extends javax.swing.JFrame {
 
         dateCheckIn.setIcon(null);
         dateCheckIn.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
+            @Override
             public void propertyChange(java.beans.PropertyChangeEvent evt) {
                 date_checkInPropertyChange(evt);
             }
@@ -219,6 +217,7 @@ public class ControlPanel extends javax.swing.JFrame {
 
         tfContact.setToolTipText("digits only");
         tfContact.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
             public void keyTyped(java.awt.event.KeyEvent evt) {
                 tf_contactKeyTyped(evt);
             }
@@ -238,15 +237,12 @@ public class ControlPanel extends javax.swing.JFrame {
         btnSaveBooking.setText("Save");
         btnSaveBooking.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 167, 157)));
         btnSaveBooking.setBorderPainted(false);
-        btnSaveBooking.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btn_saveBookingActionPerformed(evt);
-            }
-        });
+        btnSaveBooking.addActionListener(this::btn_saveBookingActionPerformed);
 
         tfRooms.setEditable(false);
 
         tfGuestNo.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
             public void keyTyped(java.awt.event.KeyEvent evt) {
                 tf_guestNoKeyTyped(evt);
             }
@@ -673,7 +669,7 @@ public class ControlPanel extends javax.swing.JFrame {
             }
         }
     }
-
+    @SuppressWarnings("unchecked")
     private void btn_room_upActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btn_room_upActionPerformed
         List<String> list = new ArrayList<>();
         list = roomsList.getSelectedValuesList();
@@ -725,6 +721,7 @@ public class ControlPanel extends javax.swing.JFrame {
         i.setVisible(true);
     }// GEN-LAST:event_jButton7ActionPerformed
 
+    @SuppressWarnings("unchecked")
     private void date_checkInPropertyChange(java.beans.PropertyChangeEvent evt) {// GEN-FIRST:event_date_checkInPropertyChange
         if (dateCheckIn.getDate() != null) {
             try {
@@ -746,8 +743,10 @@ public class ControlPanel extends javax.swing.JFrame {
         }
     }// GEN-LAST:event_date_checkInPropertyChange
 
+    @SuppressWarnings("unchecked")
     private void searchCustomerHelper() {
-        final DefaultComboBoxModel model = new DefaultComboBoxModel(customerList);
+        // final DefaultComboBoxModel model = new DefaultComboBoxModel(customerList);
+        final DefaultComboBoxModel model = new DefaultComboBoxModel();
         comboUsers.setModel(model);
 
         JTextComponent editor = (JTextComponent) comboUsers.getEditor().getEditorComponent();
@@ -917,6 +916,7 @@ public class ControlPanel extends javax.swing.JFrame {
     private javax.swing.JToolBar.Separator jSeparator4;
     private javax.swing.JSeparator jSeparator5;
     private javax.swing.JToolBar.Separator jSeparator6;
+    @SuppressWarnings("unused")
     private javax.swing.JSeparator jSeparator7;
     private javax.swing.JToolBar.Separator jSeparator8;
     private javax.swing.JToolBar jToolBar1;

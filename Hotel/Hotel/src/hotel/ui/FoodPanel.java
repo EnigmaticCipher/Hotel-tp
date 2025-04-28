@@ -27,10 +27,10 @@ public class FoodPanel extends javax.swing.JDialog {
     /**
      * Creates new form FoodPanel
      */
-    Food food;
-    ResultSet result;
-    FoodDb db = new FoodDb();
-    Vector comboItems = new Vector();
+    private transient Food food;
+    private transient ResultSet result;
+    private final transient  FoodDb db = new FoodDb();
+    private transient Vector comboItems = new Vector();
 
     public FoodPanel(java.awt.Frame parent, boolean modal) {
         super(parent, modal);

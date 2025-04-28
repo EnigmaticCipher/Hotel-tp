@@ -19,9 +19,9 @@ import net.proteanit.sql.DbUtils;
  */
 public class CustomerPanel extends javax.swing.JFrame {
 
-    UserInfo user = new UserInfo();
-    CustomerDb db = new CustomerDb();
-    ResultSet result = null;
+    private transient UserInfo user = new UserInfo();
+    private final transient CustomerDb db = new CustomerDb();
+    private transient ResultSet result = null;
     
     public CustomerPanel() {
         

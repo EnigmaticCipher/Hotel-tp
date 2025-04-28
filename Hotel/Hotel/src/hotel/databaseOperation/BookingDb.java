@@ -1,15 +1,18 @@
 package hotel.databaseOperation;
 
+import hotel.classes.Booking;
+import hotel.classes.Order;
+import hotel.classes.Room;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.Arrays;
 import javax.swing.JOptionPane;
 
-import hotel.classes.Booking;
-import hotel.classes.Order;
-
 public class BookingDb {
+   
 
     Connection conn;
     PreparedStatement statement = null;
@@ -18,37 +21,41 @@ public class BookingDb {
     public BookingDb() {
         conn = DataBaseConnection.connectTODB();
     }
+//************************i modifay this (chak) ************* */
+     public void insertBooking(Booking booking) {
 
-    public void insertBooking(Booking booking) {
-        for (int i = 0; i < booking.getRooms().size(); i++) {
-            try {
-                String insertQuery = "insert into booking"
-                        + "('customer_id','booking_room','guests','check_in','check_out','booking_type','has_checked_out')"
-                        + " values("
-                        + booking.getCustomer().getCustomerId()
-                        + ",'" + booking.getRooms().get(i).getRoomNo() + "'"
-                        + "," + booking.getPerson() + ""
-                        + "," + booking.getCheckInDateTime() + ""
-                        + "," + booking.getCheckOutDateTime() + ""
-                        + ",'" + booking.getBookingType() + "',"
-                        + 0
-                        + " )";
+        String sql = 
+    "INSERT INTO booking "
+  + "(customer_id, booking_room, guests, check_in, check_out, booking_type, has_checked_out) "
+  + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        // try-with-resources will auto-close the Connection & PreparedStatement
+        try (
+  Connection conn = DataBaseConnection.connectTODB();
+  PreparedStatement pstmt = conn.prepareStatement(sql)
+) {
+  for (Room room : booking.getRooms()) {
+    pstmt.setInt(1, booking.getCustomer().getCustomerId());
+    pstmt.setString(2, room.getRoomNo());
+    pstmt.setInt(3, booking.getPerson());
 
-                // ^^^ 0 for has_checked_out
-                statement = conn.prepareStatement(insertQuery);
-                //System.out.println(">>>>>>>>>> " + insertQuery);
-                statement.execute();
+    // <-- use Timestamp(long):
+    pstmt.setTimestamp(4, new Timestamp(booking.getCheckInDateTime()));
+    pstmt.setTimestamp(5, new Timestamp(booking.getCheckOutDateTime()));
 
-                JOptionPane.showMessageDialog(null, "successfully inserted new Booking");
+    pstmt.setString(6, booking.getBookingType());
+    pstmt.setBoolean(7, false);  // has_checked_out
 
-            } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(null, ex.toString() + "\n" + "InsertQuery  booking Failed");
-            } finally {
-                flushStatementOnly();
-            }
-        }
+    pstmt.addBatch();
+  }
 
+  int[] results = pstmt.executeBatch();
+  int inserted = Arrays.stream(results).sum();
+  JOptionPane.showMessageDialog(null, inserted + " booking(s) inserted!");
+} catch (SQLException ex) {
+  JOptionPane.showMessageDialog(null, "Insert failed: " + ex.getMessage());
+}
     }
+    //************************************************************************************************ */
 
     public ResultSet getBookingInformation() {
         try {
@@ -64,102 +71,143 @@ public class BookingDb {
 
     public ResultSet getABooking(int bookingId) {
         try {
-            String query = "select * from booking where booking_id = " + bookingId;
-            statement = conn.prepareStatement(query);
-            result = statement.executeQuery();
+            String query = "SELECT * FROM booking WHERE booking_id = ?";
+            PreparedStatement statement = conn.prepareStatement(query);
+            statement.setInt(1, bookingId); // Set the bookingId safely
+            return statement.executeQuery();
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(null, ex.toString() + "\n error coming from returning A booking DB Operation");
+            JOptionPane.showMessageDialog(null, ex.toString() + 
+                "\nError coming from returning a booking DB operation");
+            return null;
         }
-
-        return result;
     }
 
     public ResultSet bookingsReadyForOrder(String roomName) {
+        ResultSet result = null;
         try {
-           
-            String query = "select booking_id,booking_room,name from booking join userInfo on booking.customer_id = userInfo.user_id where booking_room like '%" + roomName + "%' and has_checked_out = 0 order by booking_id desc";
-            System.out.println(query);
-            statement = conn.prepareStatement(query);
+            String query = 
+                "SELECT booking_id, booking_room_name " +
+                "FROM booking " +
+                "JOIN userInfo ON booking.customer_id = userInfo.user_id " +
+                "WHERE booking_room LIKE ? AND has_checked_out = 0 " +
+                "ORDER BY booking_id DESC";
+            
+            PreparedStatement statement = conn.prepareStatement(query);
+    
+            statement.setString(1, "%" + roomName + "%");
+            
             result = statement.executeQuery();
-
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(null, ex.toString() + "\n error coming from returning bookingsReadyForOrder method,BookingDb");
+            JOptionPane.showMessageDialog(
+                null,
+                ex.toString() + "\nError in bookingsReadyForOrder method, BookingDb"
+            );
         }
-
         return result;
     }
+    
 
     public void updateCheckOut(int bookingId, long checkOutTime) {
         try {
-            String updateFood = "update booking set has_checked_out= 1, check_out = " + checkOutTime + " where booking_id = " + bookingId;
-
-            statement = conn.prepareStatement(updateFood);
-
-            statement.execute();
-
-            JOptionPane.showMessageDialog(null, "successfully update Check Out ");
-
+            String updateSql =
+                "UPDATE booking " +
+                "SET has_checked_out = 1, check_out = ? " +
+                "WHERE booking_id = ?";
+            
+            PreparedStatement statement = conn.prepareStatement(updateSql);
+            
+            statement.setLong(1, checkOutTime);
+            statement.setInt(2, bookingId);
+            
+            int rows = statement.executeUpdate();
+            if (rows > 0) {
+                JOptionPane.showMessageDialog(null, "Successfully updated check-out.");
+            } else {
+                JOptionPane.showMessageDialog(null, "No booking found with ID: " + bookingId);
+            }
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(null, ex.toString() + "\n" + "updateCheckOut of BookingDB Failed");
+            JOptionPane.showMessageDialog(
+                null,
+                ex.toString() + "\nupdateCheckOut of BookingDb failed"
+            );
         } finally {
             flushStatementOnly();
         }
     }
-
+    
     public int getRoomPrice(int bookingId) {
-
         int price = -1;
-        try {
-
-            String query = "select price from booking join room on booking_room = room_no join roomType on type= room_class where booking_id=" + bookingId;
-            System.out.println(query);
-            statement = conn.prepareStatement(query);
-            result = statement.executeQuery();
-            price = result.getInt("price");
-           
-            System.out.println(price);
-            flushAll();
-
+        
+        try (PreparedStatement statement = conn.prepareStatement(
+                "SELECT r.price FROM booking b " +
+                "JOIN room r ON b.booking_room = r.room_no " +
+                "JOIN roomType rt ON r.type = rt.room_class " +
+                "WHERE b.booking_id = ?")) {
+            
+            
+            statement.setInt(1, bookingId);
+            
+            try (ResultSet result = statement.executeQuery()) {
+                if (result.next()) {
+                    price = result.getInt("price");
+                    System.out.println(price);
+                }
+            }
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(null, ex.toString() + "\n error coming from returning price getRoomPrice,bookingDB");
+            JOptionPane.showMessageDialog(null, 
+                "Error retrieving room price: " + ex.getMessage() + 
+                "\nMethod: getRoomPrice, bookingDB");
         }
-
         return price;
     }
     
     public void insertOrder(Order order) {
         try {
-            String insertOrder = "insert into orderItem('booking_id','item_food','price','quantity','total') values(" + order.getBookingId() + ",'" + order.getFoodItem() + "'," + order.getPrice() + "," + order.getQuantity() + "," + order.getTotal() + ")";
-
-            statement = conn.prepareStatement(insertOrder);
-            System.out.println(">>>>>>>>>> " + insertOrder);
-            statement.execute();
-
-            JOptionPane.showMessageDialog(null, "successfully inserted a new Order");
-
+            String sql = ""
+                + "INSERT INTO orderItem "
+                + "(booking_id, item_food, price, quantity, total) "
+                + "VALUES (?, ?, ?, ?, ?)";
+            
+            PreparedStatement stmt = conn.prepareStatement(sql);
+       
+            stmt.setInt(1, order.getBookingId());
+            stmt.setString(2, order.getFoodItem());
+            stmt.setDouble(3, order.getPrice());
+            stmt.setInt(4, order.getQuantity());
+            stmt.setDouble(5, order.getTotal());
+            
+            int rows = stmt.executeUpdate();
+            if (rows > 0) {
+                JOptionPane.showMessageDialog(null, "Successfully inserted a new order.");
+            } else {
+                JOptionPane.showMessageDialog(null, "Insert failed, no rows affected.");
+            }
+            
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(null, ex.toString() + "\n" + "Order Failed");
+            JOptionPane.showMessageDialog(null, ex.toString() + "\nOrder insert failed");
         } finally {
             flushStatementOnly();
         }
-
     }
-
-    public ResultSet getAllPaymentInfo(int bookingId)
-    {
+    
+    public ResultSet getAllPaymentInfo(int bookingId) {
+        ResultSet result = null;
         try {
-
-            String query = "select * from orderItem where booking_id=" + bookingId;
-            System.out.println(query);
-            statement = conn.prepareStatement(query);
-            result = statement.executeQuery();
-          
-
+            String sql = "SELECT * FROM orderItem WHERE booking_id = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, bookingId);      
+            System.out.println("Executing: " + sql.replace("?", String.valueOf(bookingId)));
+            result = stmt.executeQuery();
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(null, ex.toString() + "\n error coming from returning payment getAllPaymentInfo,bookingDB");
+            JOptionPane.showMessageDialog(
+                null,
+                ex.toString() 
+                + "\nError in getAllPaymentInfo, BookingDb"
+            );
         }
         return result;
     }
+    
 
     public void flushAll() {
         {

@@ -1,12 +1,12 @@
 package hotel.databaseOperation;
 
+import hotel.classes.Food;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import javax.swing.JOptionPane;
-
-import hotel.classes.Food;
 
 /**
  *
@@ -19,22 +19,24 @@ public class FoodDb {
     ResultSet result = null;
     
      public void insertFood(Food food) {
-        try {
-            String insertFood = "insert into food('name','price') values('" + food.getName() + "'," + food.getPrice() + ")";
 
-            statement = conn.prepareStatement(insertFood);
+      String sql = ""
+    + "INSERT INTO food (name, price) "
+    + "VALUES (?, ?)";
+  try (
+    Connection conn = DataBaseConnection.connectTODB();
+    PreparedStatement pstmt = conn.prepareStatement(sql)
+  ) {
+    pstmt.setString(1, food.getName());
+    pstmt.setBigDecimal(2, BigDecimal.valueOf(food.getPrice()));
 
-            statement.execute();
-
-            JOptionPane.showMessageDialog(null, "successfully inserted a new Food Type");
-
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(null, ex.toString() + "\n" + "InsertQuery of Food Failed");
-        }
-        finally
-        {
-            flushStatmentOnly();
-        }
+    pstmt.executeUpdate();
+    JOptionPane.showMessageDialog(null, "Food added!");
+  } catch (SQLException ex) {
+    JOptionPane.showMessageDialog(
+      null, "Error inserting food: " + ex.getMessage()
+    );
+  }
     }
 
     public ResultSet getFoods() {
@@ -51,39 +53,52 @@ public class FoodDb {
     }
 
     public void updateFood(Food food) {
-        try {
-            String updateFood = "update food set name= '" + food.getName() + "', price= " + food.getPrice() + " where food_id = " + food.getFoodId();
-
-            statement = conn.prepareStatement(updateFood);
-
-            statement.execute();
-
-            JOptionPane.showMessageDialog(null, "successfully updateFood ");
-
+        String sql = ""
+          + "UPDATE food "
+          + "SET name = ?, price = ? "
+          + "WHERE food_id = ?";
+    
+        // try-with-resources will auto-close only the PreparedStatement—
+        // your existing conn field stays open until you choose to close it elsewhere
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, food.getName());
+            // if price is a double:
+            pstmt.setDouble(2, food.getPrice());
+            // or, if you prefer BigDecimal:
+            // pstmt.setBigDecimal(2, BigDecimal.valueOf(food.getPrice()));
+            pstmt.setInt(3, food.getFoodId());
+    
+            int rows = pstmt.executeUpdate();
+            JOptionPane.showMessageDialog(
+              null,
+              rows + " food item(s) updated successfully!"
+            );
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(null, ex.toString() + "\n" + "updateFood of Food Failed");
-        }
-        finally
-        {
-            flushStatmentOnly();
+            JOptionPane.showMessageDialog(
+              null,
+              "Error updating food: " + ex.getMessage()
+            );
         }
     }
-
+    
     public void deleteFood(int foodId) {
-        try {
-            String deleteQuery = "delete from food where food_id=" + foodId;
-            statement = conn.prepareStatement(deleteQuery);
-            statement.execute();
-            JOptionPane.showMessageDialog(null, "Deleted food");
+        String sql = "DELETE FROM food WHERE food_id = ?";
+    
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, foodId);
+            int rows = pstmt.executeUpdate();
+            JOptionPane.showMessageDialog(
+              null,
+              rows + " food item(s) deleted successfully!"
+            );
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(null, ex.toString() + "\n" + "Delete query FOod Failed");
+            JOptionPane.showMessageDialog(
+              null,
+              "Error deleting food: " + ex.getMessage()
+            );
         }
-        finally
-        {
-            flushStatmentOnly();
-        }
-
     }
+    
     
     public void flushAll()
     {
@@ -97,7 +112,7 @@ public class FoodDb {
                         {System.err.print(ex.toString()+" >> CLOSING DB");}
                     }
     }
-    
+    @SuppressWarnings("unused")
     private void flushStatmentOnly()
     {
         {

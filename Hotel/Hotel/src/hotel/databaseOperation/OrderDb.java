@@ -1,12 +1,11 @@
 package hotel.databaseOperation;
 
+import hotel.classes.Order;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import javax.swing.JOptionPane;
-
-import hotel.classes.Order;
 
 /**
  *
@@ -22,22 +21,34 @@ public class OrderDb {
     ResultSet result = null;
 
     public void insertOrder(Order order) {
+        String sql = ""
+          + "INSERT INTO orderItem "
+          + "(booking_id, item_food, price, quantity, total) "
+          + "VALUES (?, ?, ?, ?, ?)";
+    
         try {
-            String insertOrder = "insert into orderItem('booking_id','item_food','price','quantity','total') values(" + order.getBookingId() + ",'" + order.getFoodItem() + "'," + order.getPrice() + "," + order.getQuantity() + "," + order.getTotal() + ")";
-
-            statement = conn.prepareStatement(insertOrder);
-            System.out.println(">>>>>>>>>> " + insertOrder);
-            statement.execute();
-
-            JOptionPane.showMessageDialog(null, "successfully inserted a new Order");
-
+            statement = conn.prepareStatement(sql);
+            statement.setInt(1, order.getBookingId());
+            statement.setString(2, order.getFoodItem());
+            statement.setDouble(3, order.getPrice());
+            statement.setInt(4, order.getQuantity());
+            statement.setDouble(5, order.getTotal());
+    
+            int rows = statement.executeUpdate();
+            JOptionPane.showMessageDialog(
+              null,
+              rows + " order(s) inserted successfully!"
+            );
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(null, ex.toString() + "\n" + "Order Failed");
+            JOptionPane.showMessageDialog(
+              null,
+              "Error inserting order: " + ex.getMessage()
+            );
         } finally {
             flushStatmentOnly();
         }
-
     }
+    
 
     public void flushAll() {
         {
